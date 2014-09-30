@@ -33,7 +33,17 @@ class TagManager extends BaseTagManager
     protected function createTag($name)
     {
         $tag = parent::createTag($name);
-        $tag->setSlug($this->slugifier->slugify($name));
+        $slug = $this->slugifier->slugify($name);
+        if ($checkDupe && $tagRepo = $this->em->getRepository($this->tagClass)) {
+            $newSlug = $slug;
+            $i = 1;
+            while ($tagRepo->findOneBySlug($newSlug)) {
+                $newSlug = $slug . '-' . $i++;
+            }
+            $slug = $newSlug;
+            $this->em->flush();
+        }
+        $tag->setSlug($slug);
 
         return $tag;
     }
